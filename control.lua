@@ -12,59 +12,22 @@ local function init_script()
 		if item.valid and (item.subgroup.name == "OSM-removed" or item.subgroup.name == "OSM-placeholder") then
 			global.disabled_item_index[i] = {}
 			global.disabled_item_index[i].name = item.name
-			global.disabled_item_index[i].subgroup = item.subgroup.name
 		end
 	end
 
-	-- Regenerate tech tree and recipes
-	local researched_technologies = {}
-	local infinite = 4294967295 -- FUCK YOU!
-
+	-- Reset technologies and recipes
 	for _, force in pairs(game.forces) do
-	
-		if force.players then
-			for _, player in pairs(force.players) do
-				if player and player.connected and player.valid and player.character and player.character.valid then
-					player.character_inventory_slots_bonus  = 100000
-				end
+		for i, technology in pairs(game.technology_prototypes) do
+			if technology.valid and not technology.enabled then
+				force.technologies[technology.name].researched = false
+				force.technologies[technology.name].enabled = false
+				force.set_saved_technology_progress(technology.name, nil)
 			end
 		end
 
-		for i, technology in pairs(force.technologies) do
-			for _, prototype in pairs(game.technology_prototypes) do
-				if prototype.valid == true and prototype.name == technology.name and technology.enabled == true then
-					if technology.researched == true then
-						researched_technologies[i] = {}
-						researched_technologies[i].name = technology.name
-					elseif technology.researched == false and prototype.max_level == infinite then
-						researched_technologies[i] = {}
-						researched_technologies[i].name = technology.name
-						researched_technologies[i].level = technology.level
-					end
-				end
-			end
-		end
-
-		force.reset()
-
-		for _, technology in pairs(researched_technologies) do
-			if not technology.level then
-				force.technologies[technology.name].researched = true
-			elseif technology.level then
-				force.technologies[technology.name].level = technology.level
-			end
-		end
-	
+		force.reset_technologies()
 		force.reset_technology_effects()
 		force.reset_recipes()
-		
-		if force.players then
-			for _, player in pairs(force.players) do
-				if player and player.connected and player.valid and player.character and player.character.valid then
-					player.character_inventory_slots_bonus = 0
-				end
-			end
-		end
 	end
 end
 

@@ -1,8 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.22
+Date: 20. 04. 2022
+  Bugfixes:
+    - Control script caused wrong resets on game load, messing up the logistic and other force related things
+---------------------------------------------------------------------------------------------------
 Version: 1.1.21
 Date: 20. 04. 2022
   Bugfixes:
-    - Player does not spill items on ground when configuration is changed
+    - Player does not
+	spill items on ground when configuration is changed
     - Corrected a couple of typos causing crash on startup
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.20
