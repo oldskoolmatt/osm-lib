@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.21
+Date: 20. 04. 2022
+  Bugfixes:
+    - Player does not spill items on ground when configuration is changed
+    - Corrected a couple of typos causing crash on startup
+---------------------------------------------------------------------------------------------------
 Version: 1.1.20
 Date: 19. 04. 2022
   Info:

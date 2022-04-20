@@ -522,7 +522,7 @@ function OSM_core.finalise_prototypes()
 						result = OSM.lib.get_result_prototype(result.name or result[1], true)
 						if result.type ~= "fluid" then result.type = "item" end
 				
-						if result.OSM_removed then
+						if result and result.OSM_removed then
 							if recipe.results[2] then
 								recipe.results[i] = nil
 							else
@@ -544,7 +544,7 @@ function OSM_core.finalise_prototypes()
 
 						ingredient = OSM.lib.get_ingredient_prototype(ingredient.name or ingredient[1], true)
 
-						if ingredient.OSM_removed then
+						if ingredient and ingredient.OSM_removed then
 							recipe_prototype.OSM_ingredient_warning = true
 							if recipe.ingredients[2] then
 								recipe.ingredients[i] = nil
@@ -569,19 +569,21 @@ function OSM_core.finalise_prototypes()
 				
 				local place_result = OSM.lib.get_entity_prototype(item.place_result)
 				
-				if item.OSM_removed then item.place_result = nil end
+				if place_result then
+					if item.OSM_removed then item.place_result = nil end
 				
-				if not item.OSM_removed and place_result.OSM_removed then
+					if not item.OSM_removed and place_result.OSM_removed then
 
-					item.place_result = nil 
-					item.OSM_soft_removed = true
+						item.place_result = nil 
+						item.OSM_soft_removed = true
 		
-					if not OSM.debug_mode then item.flags = {"hidden"} end
-				end
-				
-				-- Entity
-				if item.OSM_removed and not place_result.OSM_removed then
-					place_result.OSM_soft_removed = true
+						if not OSM.debug_mode then item.flags = {"hidden"} end
+					end
+
+					-- Entity
+					if item.OSM_removed and not place_result.OSM_removed then
+						place_result.OSM_soft_removed = true
+					end
 				end
 			end
 		end

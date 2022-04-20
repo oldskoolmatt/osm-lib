@@ -800,7 +800,7 @@ function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_
 				end
 				
 				-- Check if replaced product is main_product
-				if recipe.main_product and recipe.main_product == old_result then
+				if recipe.main_product and recipe.main_product == old_result.name then
 					recipe.main_product = new_result.name
 				end
 			end

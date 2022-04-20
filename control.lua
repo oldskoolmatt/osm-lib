@@ -21,6 +21,15 @@ local function init_script()
 	local infinite = 4294967295 -- FUCK YOU!
 
 	for _, force in pairs(game.forces) do
+	
+		if force.players then
+			for _, player in pairs(force.players) do
+				if player and player.connected and player.valid and player.character and player.character.valid then
+					player.character_inventory_slots_bonus  = 100000
+				end
+			end
+		end
+
 		for i, technology in pairs(force.technologies) do
 			for _, prototype in pairs(game.technology_prototypes) do
 				if prototype.valid == true and prototype.name == technology.name and technology.enabled == true then
@@ -48,7 +57,14 @@ local function init_script()
 	
 		force.reset_technology_effects()
 		force.reset_recipes()
-
+		
+		if force.players then
+			for _, player in pairs(force.players) do
+				if player and player.connected and player.valid and player.character and player.character.valid then
+					player.character_inventory_slots_bonus = 0
+				end
+			end
+		end
 	end
 end
 
