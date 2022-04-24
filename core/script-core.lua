@@ -520,7 +520,7 @@ function OSM_core.finalise_prototypes()
 				
 						recipe_prototype.OSM_result_warning = true
 						recipe_prototype.OSM_soft_removed = true
-						recipe_prototype.recipe.OSM_regenerate = true
+						recipe_prototype.OSM_regenerate = true
 		
 						if not OSM.debug_mode then recipe_prototype.hidden = true end
 					end
@@ -536,7 +536,7 @@ function OSM_core.finalise_prototypes()
 						if result and result.OSM_removed then
 						
 							recipe_prototype.OSM_result_warning = true
-							recipe_prototype.recipe.OSM_regenerate = true
+							recipe_prototype.OSM_regenerate = true
 						
 							if recipe.results[2] then
 								recipe.results[i] = nil
@@ -561,7 +561,7 @@ function OSM_core.finalise_prototypes()
 						if ingredient and ingredient.OSM_removed then
 			
 							recipe_prototype.OSM_ingredient_warning = true
-							recipe_prototype.recipe.OSM_regenerate = true
+							recipe_prototype.OSM_regenerate = true
 		
 							if recipe.ingredients[2] then
 								recipe.ingredients[i] = nil
@@ -592,7 +592,7 @@ function OSM_core.finalise_prototypes()
 
 						item.place_result = nil 
 						item.OSM_soft_removed = true
-						item.recipe.OSM_regenerate = true
+						item.OSM_regenerate = true
 		
 						if not OSM.debug_mode then item.flags = {"hidden"} end
 					end
@@ -600,7 +600,7 @@ function OSM_core.finalise_prototypes()
 					-- Entity
 					if item.OSM_removed and not place_result.OSM_removed then
 						place_result.OSM_soft_removed = true
-						place_result.recipe.OSM_regenerate = true
+						place_result.OSM_regenerate = true
 					end
 				end
 			end
