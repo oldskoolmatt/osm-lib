@@ -77,6 +77,17 @@ function OSM.lib.get_result_prototype(prototype_name, get_copy)
 	end
 end
 
+-- Returns resource prototype
+function OSM.lib.get_resource_prototype(prototype_name, get_copy)
+	if data.raw.resource[prototype_name] then
+		local resource = data.raw.resource[prototype_name]
+		if get_copy then
+			resource = table.deepcopy(resource)
+		end
+		return data.raw.resource[prototype_name]
+	end
+end
+
 -- Returns ingredient prototype
 function OSM.lib.get_ingredient_prototype(prototype_name, get_copy)
 	for _, item in pairs(OSM.item_types) do
@@ -132,10 +143,20 @@ function OSM.lib.get_main_result_prototype(recipe_name, get_copy)
 	end
 end
 
+-- Returns boolean setting value
+function OSM.lib.get_setting_boolean(setting_name)
+	if settings.startup[setting_name] then
+		local setting = settings.startup[setting_name]
+		if setting.type == "bool-setting" then
+			if setting.value then return true end
+		end
+	end
+end
+
 --[[##################################################################]]
 --[[############################# PROTOTYPE ##########################]]
 
--- Disable prototype [supports: entity, resource, recipe, item, fluid, technology (as single strings or table array)]
+-- Disable prototype [supports: entity, resource, recipe, item, fluid, technology (as single string or table array)]
 function OSM.lib.disable_prototype(prototype_type, prototype_name)
 
 	-- Check if mod calling the function is declared
@@ -212,6 +233,23 @@ function OSM.lib.disable_prototype(prototype_type, prototype_name)
 				OSM.table.disabled_prototypes["technology"][technology.name].name = technology.name
 				OSM.table.disabled_prototypes["technology"][technology.name].mod_name = OSM.mod
 			end
+		elseif prototype_type == "technology-chain" then
+			for _, upgrade in pairs(data.raw.technology) do
+	
+				local upgrade_name = upgrade.name
+		
+				local technology_level = tonumber(string.sub(prototype_name, -1))
+				local upgrade_level = tonumber(string.sub(upgrade_name, -1))
+				
+				if type(technology_level) == "number" then prototype_name = string.sub(prototype_name, 1, #prototype_name-1) end
+				if type(upgrade_level) == "number" then upgrade_name = string.sub(upgrade_name, 1, #upgrade_name-1) end
+		
+				if (prototype_name == upgrade_name) or (prototype_name.."-" == upgrade_name) then
+					OSM.table.disabled_prototypes["technology"][upgrade.name] = {}
+					OSM.table.disabled_prototypes["technology"][upgrade.name].name = upgrade.name
+					OSM.table.disabled_prototypes["technology"][upgrade.name].mod_name = OSM.mod
+				end
+			end
 		elseif prototype_type == "resource" then
 			if resource then
 				OSM.table.disabled_prototypes["resource"][resource.name] = {}
@@ -233,7 +271,7 @@ function OSM.lib.disable_prototype(prototype_type, prototype_name)
 	end
 end
 
--- Enable prototype [overrides disable prototype, supports: entity, resource, recipe, item, fluid, technology (as single strings or table array)]
+-- Enable prototype [overrides disable prototype, supports: entity, resource, recipe, item, fluid, technology and technology-chain (as single string or table array)]
 function OSM.lib.enable_prototype(prototype_type, prototype_name)
 
 		-- Check if mod calling the function is declared
@@ -304,11 +342,28 @@ function OSM.lib.enable_prototype(prototype_type, prototype_name)
 				OSM.table.enabled_prototypes["fluid"][fluid.name].name = fluid.name
 				OSM.table.enabled_prototypes["fluid"][fluid.name].mod_name = OSM.mod
 			end
-		elseif prototype_type == "technology" then
+		elseif prototype_type == "technology" or "technology-chain" then
 			if technology then
 				OSM.table.enabled_prototypes["technology"][technology.name] = {}
 				OSM.table.enabled_prototypes["technology"][technology.name].name = technology.name
 				OSM.table.enabled_prototypes["technology"][technology.name].mod_name = OSM.mod
+			end
+		elseif prototype_type == "technology-chain" then
+			for _, upgrade in pairs(data.raw.technology) do
+	
+				local upgrade_name = upgrade.name
+		
+				local technology_level = tonumber(string.sub(prototype_name, -1))
+				local upgrade_level = tonumber(string.sub(upgrade_name, -1))
+				
+				if type(technology_level) == "number" then prototype_name = string.sub(prototype_name, 1, #prototype_name-1) end
+				if type(upgrade_level) == "number" then upgrade_name = string.sub(upgrade_name, 1, #upgrade_name-1) end
+		
+				if (prototype_name == upgrade_name) or (prototype_name.."-" == upgrade_name) then
+					OSM.table.enabled_prototypes["technology"][upgrade.name] = {}
+					OSM.table.enabled_prototypes["technology"][upgrade.name].name = upgrade.name
+					OSM.table.enabled_prototypes["technology"][upgrade.name].mod_name = OSM.mod
+				end
 			end
 		elseif prototype_type == "resource" then
 			if resource then
@@ -450,10 +505,16 @@ function OSM.lib.recipe_add_ingredient(ingredient_name, ingredient_amount, recip
 	end
 end
 
--- Add result to recipe
+-- Add result to recipe [result_amount as table supports: amount, amount_min, amount_max, probability]
 function OSM.lib.recipe_add_result(result_name, result_amount, recipe_name)
 
 	if not OSM.mod or OSM.mod == {} then error("Mod name not specified") end
+
+	local result_amount_min = result_amount.amount_min or nil
+	local result_amount_max = result_amount.amount_max or nil
+	local result_probability = result_amount.probability or nil
+
+	if type(result_amount) == "table" then result_amount = result_amount.amount end
 	
 	local recipe = OSM.lib.get_recipe_prototype(recipe_name)
 	local result = OSM.lib.get_result_prototype(result_name, true)
@@ -475,7 +536,7 @@ function OSM.lib.recipe_add_result(result_name, result_amount, recipe_name)
 			for _, dupe_result in pairs(recipe.results) do
 				if dupe_result == result.name or result[1] then return end
 			end
-			table.insert(recipe.results, {type=result_type, name=result_name, amount=result_amount})
+			table.insert(recipe.results, {type=result_type, name=result_name, amount=result_amount, amount_min=result_amount_min, amount_max=result_amount_max})
 			table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully added result: ("..result.type..") "..'"'..result.name..'"'.." to recipe: "..'"'..recipe.name..'"')
 
 		elseif recipe.result then
@@ -485,7 +546,7 @@ function OSM.lib.recipe_add_result(result_name, result_amount, recipe_name)
 			recipe.results =
 			{
 				{type="item", name=single_result.name, amount=recipe.result_count or 1},
-				{type=result_type, name=result_name, amount=result_amount}
+				{type=result_type, name=result_name, amount=result_amount, amount_min=result_amount_min, amount_max=result_amount_max}
 			}
 
 			recipe.result = nil
@@ -615,6 +676,7 @@ function OSM.lib.recipe_remove_result(result_name, recipe_name)
 	end
 end
 
+-- Remove recipe from module limitation list
 function OSM.lib.recipe_remove_module_limitation(recipe_name)
 	for _, module in pairs(data.raw.module) do
 		if module.limitation then
@@ -1100,6 +1162,108 @@ function OSM.lib.technology_replace_prerequisite(old_prerequisite_name, new_prer
 			if technology.prerequisites then
 				replace_prerequisite(technology)
 			end
+		end
+	end
+end
+
+--[[##################################################################]]
+--[[############################ RESOURCE ############################]]
+
+-- Replace resource result [resource_name is optional]
+function OSM.lib.resource_replace_result(old_result_name, new_result_name, resource_name)
+
+	if not OSM.mod or OSM.mod == {} then error("Mod name not specified") end
+
+	local resource = OSM.lib.get_resource_prototype(resource_name)
+	local new_result = OSM.lib.get_result_prototype(new_result_name, true)
+	local old_result = OSM.lib.get_result_prototype(old_result_name, true)
+	
+	if OSM.debug_mode then
+		if resource_name and not resource then 
+			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..resource_name..'"'.." (resource)")
+		end
+
+		if not old_result then 
+			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..old_result_name..'"'.." (old result)")
+		end
+		
+		if not new_result then 
+			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..new_result_name..'"'.." (new result)")
+		end
+	end
+	
+	if not new_result then return end
+	if not old_result then return end
+	
+	local function replace_result(resource)
+
+		if resource.minable.results then
+			for _, result in pairs(resource.minable.results) do
+				if old_result.name == (result.name or result[1]) then
+				
+					local result_type = new_result.type
+					local result_amount = result.amount or result[2]
+					local duplicate_index = {}
+
+					if result_type ~= "fluid" then result_type = "item" end
+					
+					-- Check for duplicates
+					for i, dupe_result in pairs (resource.minable.results) do
+						if new_result.name == (dupe_result.name or dupe_result[1]) then
+
+							duplicate_index.amount = dupe_result.amount or dupe_result[2]
+							duplicate_index.amount_min = dupe_result.amount_min
+							duplicate_index.amount_max = dupe_result.amount_max
+							duplicate_index.probability = dupe_result.probability
+	
+							results[i] = nil
+						end
+					end
+
+					if not result.name then result[1] = nil end
+					if not result.amount then result[2] = nil end
+					
+					result.name = new_result.name
+					result.type = result_type
+					result.amount = result_amount
+					
+					if duplicate_index.amount and result.amount then
+						result.amount = result.amount+duplicate_index.amount
+					end 
+					
+					if duplicate_index.amount_min and result.amount_min then
+						result.amount_min = math.floor((result.amount_min+duplicate_index.amount_min)/2-0.5)
+					end
+					
+					if duplicate_index.amount_max and result.amount_max then
+						result.amount_max = math.floor((result.amount_max+duplicate_index.amount_max)/2-0.5)
+					end
+					
+					if duplicate_index.probability and result.probability then
+						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
+					end
+					if duplicate_index.temperature and result.temperature then
+						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
+					end
+					
+					table.insert(OSM.log.resource, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
+				end
+			end
+		end
+
+		if resource.minable and resource.minable.result and resource.minable.result.name == old_result.name then
+			resource.minable.result.name = new_result.name
+			table.insert(OSM.log.resource, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
+		end
+
+	end
+	
+	if resource_name and resource then
+		replace_result(resource)
+
+	elseif not resource_name then
+		for _, resource in pairs(data.raw.resource) do
+			replace_result(resource)
 		end
 	end
 end

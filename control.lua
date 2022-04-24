@@ -17,11 +17,16 @@ local function init_script()
 
 	-- Reset technologies and recipes
 	for _, force in pairs(game.forces) do
-		for i, technology in pairs(game.technology_prototypes) do
-			if technology.valid and not technology.enabled then
-				force.technologies[technology.name].researched = false
-				force.technologies[technology.name].enabled = false
-				force.set_saved_technology_progress(technology.name, nil)
+		for _, technology in pairs(game.technology_prototypes) do
+			if force.technologies[technology.name] and technology.valid and not technology.enabled then
+				
+				local force_technology = force.technologies[technology.name]
+				
+				force_technology.researched = false
+				force_technology.enabled = false
+
+				if force.get_saved_technology_progress(technology.name) then force.set_saved_technology_progress(technology.name, nil) end
+				if force.current_research == technology.name then force.cancel_current_research() end
 			end
 		end
 

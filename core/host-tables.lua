@@ -3,6 +3,7 @@ if not OSM then OSM = {} end
 if not OSM.mod then OSM.mod = {} end
 if not OSM.lib then OSM.lib = {} end
 if not OSM.log then OSM.log = {} end
+if not OSM.utils then OSM.utils = {} end
 if not OSM.table then OSM.table = {} end
 
 -- Disabled prototype host table
@@ -33,9 +34,6 @@ OSM.log.item = {}
 OSM.log.fluid = {}
 OSM.log.technology = {}
 OSM.log.errors = {}
-
--- Function errors log
-
 
 -- Handy constants
 OSM.void_results = {{type="item", name="OSM-result-void", amount=1, probability=0}}

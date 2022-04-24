@@ -1,14 +1,14 @@
 {
 	"name": "osm-lib",
-	"version": "1.1.22",
+	"version": "1.1.23",
 	"factorio_version": "1.1",
 	"title": "OSM-Lib",
 	"author": "OldSkoolMatt",
 	"dependencies":
 	[
 		"base >= 1.1",
-		"(?) deadlock-beltboxes-loaders",
-		"(?) Transport_Drones"
+		"(?) Transport_Drones",
+		"(?) space-exploration"
 	],
 	"description": "I finally decided to rely on my own function library,\nYES! THAT'S CORRECT! MY OWN FUNCTION LIBRARY!"
 }

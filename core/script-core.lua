@@ -81,7 +81,7 @@ function OSM_core.index_icons()
 			OSM.table.prototype_index[prototype.type][prototype.name].icons = icons_index
 
 		else
-			table.insert(OSM.log.missing_icons, "Failed to generate icon for: ("..prototype.type..") "..'"'..prototype.name..'"')
+			table.insert(OSM.log.missing_icons, "Failed to index icon for: ("..prototype.type..") "..'"'..prototype.name..'"')
 		end
 	end
 
@@ -215,39 +215,42 @@ function OSM_core.disable_prototypes()
 	OSM.log.enabled_prototypes = {}
 
 	local function disable_technology(technology)
-		if data.raw.technology[technology.name] then
-	
-			local mod_name = technology.mod_name
-			local technology = data.raw.technology[technology.name]
-			
-			technology.enabled = false
-			technology.OSM_removed = true
-			technology.icon = "__osm-lib__/graphics/ban-technology.png"
-			technology.icon_size = 128
-			technology.icon_mipmaps = nil
-			technology.icons = nil
-			technology.prerequisites = {}
-			technology.effects = {}
-			technology.localised_name = {"", technology.name}
-			technology.localised_description = {"", "Disabled by: "..mod_name}
-			
-			if not OSM.debug_mode then technology.hidden = true end
-			if OSM.debug_mode == true then technology.visible_when_disabled = true end
 
-			-- Removes technology from other techs prerequisites
-			for _, tech in pairs(data.raw.technology) do
-				if tech.prerequisites then
-					for i, prerequisite in pairs (tech.prerequisites) do
-						if prerequisite == technology.name then
+		if not data.raw.technology[technology.name] then return end
 
-							table.insert(OSM.log.technology, "Mod: "..'"'..mod_name..'"'..": Successfully removed prerequisite: "..'"'..technology.name..'"'.." from technology: "..'"'..tech.name..'"')
-							table.remove(technology.prerequisites, i)
-						end
+		local mod_name = technology.mod_name
+		local technology = data.raw.technology[technology.name]
+		
+		technology.enabled = false
+		technology.OSM_removed = true
+		technology.OSM_regenerate = true
+
+		technology.icon = "__osm-lib__/graphics/ban-technology.png"
+		technology.icon_size = 128
+		technology.icon_mipmaps = nil
+		technology.effects = {}
+		technology.icons = nil
+		technology.max_level  = nil
+		technology.prerequisites = {}
+		technology.localised_name = {"", technology.name}
+		technology.localised_description = {"", "Disabled by: "..mod_name}
+		
+		if not OSM.debug_mode then technology.hidden = true end
+		if OSM.debug_mode then technology.visible_when_disabled = true end
+
+		-- Removes technology from other techs prerequisites
+		for _, tech in pairs(data.raw.technology) do
+			if tech.prerequisites then
+				for i, prerequisite in pairs (tech.prerequisites) do
+					if prerequisite == technology.name then
+
+						table.insert(OSM.log.technology, "Mod: "..'"'..mod_name..'"'..": Successfully removed prerequisite: "..'"'..technology.name..'"'.." from technology: "..'"'..tech.name..'"')
+						table.remove(technology.prerequisites, i)
 					end
 				end
 			end
-			table.insert(OSM.log.disabled_prototypes, "Mod: "..'"'..mod_name..'"'..": Successfully disabled technology: "..'"'..technology.name..'"')
 		end
+		table.insert(OSM.log.disabled_prototypes, "Mod: "..'"'..mod_name..'"'..": Successfully disabled technology: "..'"'..technology.name..'"')
 	end
 
 	local function disable_recipe(recipe)
@@ -258,6 +261,7 @@ function OSM_core.disable_prototypes()
 
 			recipe.subgroup = "OSM-removed"
 			recipe.OSM_removed = true
+			recipe.OSM_regenerate = true
 	
 			recipe.enabled = false
 			recipe.category = nil
@@ -305,6 +309,9 @@ function OSM_core.disable_prototypes()
 
 			item.subgroup = "OSM-removed"
 			item.OSM_removed = true
+			item.OSM_regenerate = true
+
+			item.place_result = nil
 
 			item.localised_name = {"", item.name}
 			item.localised_description = {"", "Disabled by: "..mod_name}
@@ -324,6 +331,7 @@ function OSM_core.disable_prototypes()
 			fluid.place_result = nil
 			fluid.subgroup = "OSM-removed"
 			fluid.OSM_removed = true
+			fluid.OSM_regenerate = true
 
 			fluid.localised_name = {"", fluid.name}
 			fluid.localised_description = {"", "Disabled by: "..mod_name}
@@ -350,6 +358,7 @@ function OSM_core.disable_prototypes()
 
 			entity.subgroup = "OSM-removed"
 			entity.OSM_removed = true
+			entity.OSM_regenerate = true
 			entity.next_upgrade = nil
 			entity.placeable_by = nil
 
@@ -365,6 +374,7 @@ function OSM_core.disable_prototypes()
 	local function disable_resource(resource)
 
 		local mod_name = resource.mod_name
+		local resource_name = resource.name
 		
 		for _, resource in pairs(data.raw.resource) do
 			if string.find(resource.name, resource_name, 1, true) then
@@ -510,6 +520,7 @@ function OSM_core.finalise_prototypes()
 				
 						recipe_prototype.OSM_result_warning = true
 						recipe_prototype.OSM_soft_removed = true
+						recipe_prototype.recipe.OSM_regenerate = true
 		
 						if not OSM.debug_mode then recipe_prototype.hidden = true end
 					end
@@ -523,6 +534,10 @@ function OSM_core.finalise_prototypes()
 						if result.type ~= "fluid" then result.type = "item" end
 				
 						if result and result.OSM_removed then
+						
+							recipe_prototype.OSM_result_warning = true
+							recipe_prototype.recipe.OSM_regenerate = true
+						
 							if recipe.results[2] then
 								recipe.results[i] = nil
 							else
@@ -533,7 +548,6 @@ function OSM_core.finalise_prototypes()
 		
 								if not OSM.debug_mode then recipe_prototype.hidden = true end
 							end
-							recipe_prototype.OSM_result_warning = true
 						end
 					end
 				end
@@ -545,7 +559,10 @@ function OSM_core.finalise_prototypes()
 						ingredient = OSM.lib.get_ingredient_prototype(ingredient.name or ingredient[1], true)
 
 						if ingredient and ingredient.OSM_removed then
+			
 							recipe_prototype.OSM_ingredient_warning = true
+							recipe_prototype.recipe.OSM_regenerate = true
+		
 							if recipe.ingredients[2] then
 								recipe.ingredients[i] = nil
 							else
@@ -570,12 +587,12 @@ function OSM_core.finalise_prototypes()
 				local place_result = OSM.lib.get_entity_prototype(item.place_result)
 				
 				if place_result then
-					if item.OSM_removed then item.place_result = nil end
 				
 					if not item.OSM_removed and place_result.OSM_removed then
 
 						item.place_result = nil 
 						item.OSM_soft_removed = true
+						item.recipe.OSM_regenerate = true
 		
 						if not OSM.debug_mode then item.flags = {"hidden"} end
 					end
@@ -583,6 +600,7 @@ function OSM_core.finalise_prototypes()
 					-- Entity
 					if item.OSM_removed and not place_result.OSM_removed then
 						place_result.OSM_soft_removed = true
+						place_result.recipe.OSM_regenerate = true
 					end
 				end
 			end
@@ -591,82 +609,92 @@ function OSM_core.finalise_prototypes()
 end
 
 -- Regenerate properties
-function OSM_core.regenerate_icons()
+function OSM_core.regenerate_properties()
 
-	local function rebuild_icon(prototype)
-	
-		if not OSM.table.prototype_index[prototype.type] then return end
-		if not OSM.table.prototype_index[prototype.type][prototype.name] then return end
-		if not OSM.table.prototype_index[prototype.type][prototype.name].icons then return end
-		
-		local icons_path = OSM.lib.icons_path
-		local ban_icon = icons_path.."ban.png"
-		local ban_warn = icons_path.."soft-ban.png"
-		local yellow_warn = icons_path.."yellow-warning.png"
-		local orange_warn = icons_path.."orange-warning.png"
-		local red_warn = icons_path.."red-warning.png"
+	local function regenerate_icons()
+
+		local function rebuild_icon(prototype)
 			
-		prototype.icons = OSM.table.prototype_index[prototype.type][prototype.name].icons
+			if not prototype.OSM_regenerate then return end
+			if not OSM.table.prototype_index[prototype.type] then return end
+			if not OSM.table.prototype_index[prototype.type][prototype.name] then return end
+			if not OSM.table.prototype_index[prototype.type][prototype.name].icons then return end
+			
+			if not OSM.log.regenerated_icons then OSM.log.regenerated_icons = {} end
+			
+			local icons_path = OSM.lib.icons_path
+			local ban_icon = icons_path.."ban.png"
+			local ban_warn = icons_path.."soft-ban.png"
+			local yellow_warn = icons_path.."yellow-warning.png"
+			local orange_warn = icons_path.."orange-warning.png"
+			local red_warn = icons_path.."red-warning.png"
+				
+			prototype.icons = OSM.table.prototype_index[prototype.type][prototype.name].icons
+		
+			prototype.icon = nil
+	--		prototype.icon_size = nil -- used by dark_background_icon
+			prototype.icon_mipmaps = nil
+			prototype.scale = nil
+			prototype.tint = nil
+			prototype.shift = nil
 	
-		prototype.icon = nil
---		prototype.icon_size = nil -- used by dark_background_icon
-		prototype.icon_mipmaps = nil
-		prototype.scale = nil
-		prototype.tint = nil
-		prototype.shift = nil
-
-		-- Layer ban icon
-		if prototype.OSM_removed then
-			table.insert(prototype.icons, {icon=ban_icon, icon_size=128, scale=0.25})
+			-- Layer ban icon
+			if prototype.OSM_removed then
+				table.insert(prototype.icons, {icon=ban_icon, icon_size=128, scale=0.25})
+			end
+			
+			if prototype.OSM_soft_removed and not prototype.OSM_removed then
+				table.insert(prototype.icons, {icon=ban_warn, icon_size=128, scale=0.25})
+			end
+			
+			-- Layer result warning icon
+			if prototype.OSM_result_warning and prototype.OSM_result_warning then
+				table.insert(prototype.icons, {icon=yellow_warn, icon_size=128, scale=0.25})
+			end
+			
+			-- Layer unlock warning icon
+			if prototype.OSM_unlock_warning and prototype.OSM_unlock_warning then
+				table.insert(prototype.icons, {icon=orange_warn, icon_size=128, scale=0.25})
+			end
+			
+			-- Layer ingredient warning icon
+			if prototype.OSM_ingredient_warning and prototype.OSM_ingredient_warning then
+				table.insert(prototype.icons, {icon=red_warn, icon_size=128, scale=0.25})
+			end
+	
+			table.insert(OSM.log.regenerated_icons, "Regenerated icon for: ("..prototype.type..") "..'"'..prototype.name..'"')
 		end
-		
-		if prototype.OSM_soft_removed and not prototype.OSM_removed then
-			table.insert(prototype.icons, {icon=ban_warn, icon_size=128, scale=0.25})
+	
+		for _, fluid in pairs(data.raw.fluid) do
+			rebuild_icon(fluid)
 		end
-		
-		-- Layer result warning icon
-		if prototype.OSM_result_warning and prototype.OSM_result_warning then
-			table.insert(prototype.icons, {icon=yellow_warn, icon_size=128, scale=0.25})
+	
+		for _, item_type in pairs(OSM.item_types) do
+			for _, item in pairs(data.raw[item_type]) do
+				rebuild_icon(item)
+			end
 		end
-		
-		-- Layer unlock warning icon
-		if prototype.OSM_unlock_warning and prototype.OSM_unlock_warning then
-			table.insert(prototype.icons, {icon=orange_warn, icon_size=128, scale=0.25})
-		end
-		
-		-- Layer ingredient warning icon
-		if prototype.OSM_ingredient_warning and prototype.OSM_ingredient_warning then
-			table.insert(prototype.icons, {icon=red_warn, icon_size=128, scale=0.25})
-		end
-	end
-
-	for _, fluid in pairs(data.raw.fluid) do
-		rebuild_icon(fluid)
-	end
-
-	for _, item_type in pairs(OSM.item_types) do
-		for _, item in pairs(data.raw[item_type]) do
-			rebuild_icon(item)
-		end
-	end
-
-	for _, entity_type in pairs(OSM.entity_types) do
-		for _, entity in pairs(data.raw[entity_type]) do		
-			if entity.flags then
-				for _, flag in pairs(entity.flags) do
-					if flag == "placeable-neutral" or "placeable-player" or "placeable-enemy" then
-						rebuild_icon(entity)
-						goto done
+	
+		for _, entity_type in pairs(OSM.entity_types) do
+			for _, entity in pairs(data.raw[entity_type]) do		
+				if entity.flags then
+					for _, flag in pairs(entity.flags) do
+						if flag == "placeable-neutral" or "placeable-player" or "placeable-enemy" then
+							rebuild_icon(entity)
+							goto done
+						end
 					end
 				end
+				::done::
 			end
-			::done::
+		end
+	
+		for _, recipe in pairs(data.raw.recipe) do
+			rebuild_icon(recipe)
 		end
 	end
-
-	for _, recipe in pairs(data.raw.recipe) do
-		rebuild_icon(recipe)
-	end
+	
+	regenerate_icons()
 end
 
 --Print log
@@ -677,6 +705,9 @@ function OSM_core.print_log()
 			log(message)
 		end
 	end
+	
+	-- Log regenerated icons
+	print_log(OSM.log.regenerated_icons)
 	
 	-- Log disabled prototypes
 	print_log(OSM.log.disabled_prototypes)
@@ -715,16 +746,17 @@ function OSM_core.debug_mode()
 		for _, sub_type in pairs(OSM.data_types) do
 			for _, prototype in pairs(data.raw[sub_type]) do
 				if prototype.name then
+					if prototype.hidden then
+						prototype.localised_name = {"", prototype.name.." [color=#8e0d79][HIDDEN][/color]"}
+					else
+						prototype.localised_name = {"", prototype.name}
+					end
 					if prototype.flags then
 						for _, flag in pairs(prototype.flags) do
 							if flag == "hidden" then 
 								prototype.localised_name = {"", prototype.name.."[color=#8e0d79] [HIDDEN][/color]"}
 							end
 						end
-					elseif prototype.hidden then
-						prototype.localised_name = {"", prototype.name.." [color=#8e0d79][HIDDEN][/color]"}
-					else
-						prototype.localised_name = {"", prototype.name}
 					end
 				end
 			end

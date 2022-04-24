@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.23
+Date: 24. 04. 2022
+  Info:
+    - Polishing and cleaning
+  Bugfixes:
+    - Fixed an a few issues regarding icon regeneration (now compatible with space exploration)
+---------------------------------------------------------------------------------------------------
 Version: 1.1.22
 Date: 20. 04. 2022
   Bugfixes:

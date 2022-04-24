@@ -18,7 +18,7 @@ OSM_core.disable_prototypes()
 OSM_core.finalise_prototypes()
 
 -- Regenerate properties
-OSM_core.regenerate_icons()
+OSM_core.regenerate_properties()
 
 -- Print log
 OSM_core.print_log()
