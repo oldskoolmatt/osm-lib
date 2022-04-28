@@ -18,10 +18,11 @@ local function init_script()
 	-- Reset technologies and recipes
 	for _, force in pairs(game.forces) do
 		for _, technology in pairs(game.technology_prototypes) do
-			if force.technologies[technology.name] and technology.valid and not technology.enabled then
-				
-				local force_technology = force.technologies[technology.name]
-				
+			
+			local force_technology = force.technologies[technology.name]
+			
+			if force_technology and force_technology.researched and technology.valid and not technology.enabled then
+
 				force_technology.researched = false
 				force_technology.enabled = false
 
