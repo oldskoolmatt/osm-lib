@@ -146,10 +146,10 @@ end
 -- Returns boolean setting value
 function OSM.lib.get_setting_boolean(setting_name)
 	if settings.startup[setting_name] then
-		local setting = settings.startup[setting_name]
-		if setting.type == "bool-setting" then
-			if setting.value then return true end
-		end
+	
+		local value = settings.startup[setting_name].value
+
+		if type(value) == "boolean" then return value end
 	end
 end
 
@@ -158,6 +158,9 @@ end
 
 -- Disable prototype [supports: entity, resource, recipe, item, fluid, technology (as single string or table array)]
 function OSM.lib.disable_prototype(prototype_type, prototype_name)
+	
+	-- Data stage check
+	if OSM.data_stage == 3 then error("Function: "..'"OSM.lib.disable_prototype"'.." MUST be called before final-fixes stage!") end
 
 	-- Check if mod calling the function is declared
 	if not OSM.mod or OSM.mod == {} then
@@ -274,7 +277,10 @@ end
 -- Enable prototype [overrides disable prototype, supports: entity, resource, recipe, item, fluid, technology and technology-chain (as single string or table array)]
 function OSM.lib.enable_prototype(prototype_type, prototype_name)
 
-		-- Check if mod calling the function is declared
+	-- Data stage check
+	if OSM.data_stage == 3 then error("Function: "..'"OSM.lib.enable_prototype"'.." MUST be called before final-fixes stage!") end
+
+	-- Check if mod calling the function is declared
 	if not OSM.mod or OSM.mod == {} then
 		error("Mod name not specified")
 	end
@@ -500,7 +506,7 @@ function OSM.lib.recipe_add_ingredient(ingredient_name, ingredient_amount, recip
 				if dupe_ingredient == ingredient.name or ingredient[1] then return end
 			end
 			table.insert(recipe.ingredients, {type=ingredient_type, name=ingredient_name, amount=ingredient_amount})
-			table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully added ingredient: ("..ingredient.type..") "..'"'..ingredient.name..'"'.." to recipe: "..'"'..recipe.name..'"')
+			table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully added ingredient: ("..ingredient.type..") "..'"'..ingredient.name..'"'.." to recipe: "..'"'..recipe.name..'"')
 		end
 	end
 end
@@ -537,7 +543,7 @@ function OSM.lib.recipe_add_result(result_name, result_amount, recipe_name)
 				if dupe_result == result.name or result[1] then return end
 			end
 			table.insert(recipe.results, {type=result_type, name=result_name, amount=result_amount, amount_min=result_amount_min, amount_max=result_amount_max})
-			table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully added result: ("..result.type..") "..'"'..result.name..'"'.." to recipe: "..'"'..recipe.name..'"')
+			table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully added result: ("..result.type..") "..'"'..result.name..'"'.." to recipe: "..'"'..recipe.name..'"')
 
 		elseif recipe.result then
 			
@@ -552,7 +558,7 @@ function OSM.lib.recipe_add_result(result_name, result_amount, recipe_name)
 			recipe.result = nil
 			recipe.result_count = nil
 			recipe.main_product = single_result.name
-			table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully added result: ("..result.type..") "..'"'..result.name..'"'.." to recipe: "..'"'..recipe.name..'"')
+			table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully added result: ("..result.type..") "..'"'..result.name..'"'.." to recipe: "..'"'..recipe.name..'"')
 		end
 	end
 end
@@ -567,11 +573,11 @@ function OSM.lib.recipe_remove_ingredient(ingredient_name, recipe_name)
 	
 	if OSM.debug_mode then
 		if recipe_name and not recipe then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_ingredient"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_ingredient"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 		end
 
 		if not ingredient then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_ingredient"'.." targeting missing prototype: "..'"'..ingredient_name..'"'.." (target ingredient)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_ingredient"'.." targeting missing prototype: "..'"'..ingredient_name..'"'.." (target ingredient)")
 		end
 	end
 	
@@ -582,7 +588,7 @@ function OSM.lib.recipe_remove_ingredient(ingredient_name, recipe_name)
 			for i, ingredient in pairs(recipe.ingredients) do
 				if ingredient_name == ingredient.name or ingredient[1] then
 					recipe.ingredients[i] = nil
-					table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully removed ingredient: ("..ingredient.type..") "..'"'..ingredient.name..'"'.." from recipe: "..'"'..recipe.name..'"')
+					table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully removed ingredient: ("..ingredient.type..") "..'"'..ingredient.name..'"'.." from recipe: "..'"'..recipe.name..'"')
 				end
 			end
 		end
@@ -624,11 +630,11 @@ function OSM.lib.recipe_remove_result(result_name, recipe_name)
 	
 	if OSM.debug_mode then
 		if recipe_name and not recipe then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_result"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_result"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 		end
 
 		if not result then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_result"'.." targeting missing prototype: "..'"'..result_name..'"'.." (target result)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_remove_result"'.." targeting missing prototype: "..'"'..result_name..'"'.." (target result)")
 		end
 	end
 	
@@ -639,13 +645,13 @@ function OSM.lib.recipe_remove_result(result_name, recipe_name)
 			for i, result in pairs(recipe.results) do
 				if result_name == result.name or result[1] then
 					recipe.results[i] = nil
-					table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully removed result: ("..result.type..") "..'"'..result.name..'"'.." from recipe: "..'"'..recipe.name..'"')
+					table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully removed result: ("..result.type..") "..'"'..result.name..'"'.." from recipe: "..'"'..recipe.name..'"')
 				end
 			end
 	
 		elseif (recipe.result and recipe.result == result_name and not recipe.results) or (recipe.results and recipe.results[#recipe.results] <= 1) then
 			if OSM.debug_mode then
-				table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Attempted to remove single result: ("..result.type..") "..'"'..result.name..'"'.." from recipe: "..'"'..recipe_name..'"')
+				table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Attempted to remove single result: ("..result.type..") "..'"'..result.name..'"'.." from recipe: "..'"'..recipe_name..'"')
 			end
 		end
 	end
@@ -689,11 +695,22 @@ function OSM.lib.recipe_remove_module_limitation(recipe_name)
 	end
 end
 
--- Replace ingredient in recipe [recipe_name is optional]
-function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_name, recipe_name)
+-- Replace ingredient in recipe [new_ingredient_args supports string or table array, recipe_name is optional]
+function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_args, recipe_name)
 
 		-- Check if mod calling the function is declared
 	if not OSM.mod or OSM.mod == {} then error("Mod name not specified") end
+	
+	-- Index prototypes
+	local new_ingredient_name = false
+	local new_ingredient_amount = false
+	
+	if type(new_ingredient_args) == "table" then
+		new_ingredient_name = new_ingredient_args.name or new_ingredient_args[1]
+		new_ingredient_amount = new_ingredient_args.amount or new_ingredient_args[2]
+	elseif type(new_ingredient_args) == "string" then
+		new_ingredient_name = new_ingredient_args
+	end
 
 	local recipe = OSM.lib.get_recipe_prototype(recipe_name)
 	local new_ingredient = OSM.lib.get_ingredient_prototype(new_ingredient_name, true)
@@ -701,15 +718,15 @@ function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_n
 
 	if OSM.debug_mode then
 		if recipe_name and not data.raw.recipe[recipe_name] then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 		end
 
 		if not old_ingredient then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..old_ingredient_name..'"'.." (old ingredient)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..old_ingredient_name..'"'.." (old ingredient)")
 		end
 		
 		if not new_ingredient then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..new_ingredient_name..'"'.." (new ingredient)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_ingredient"'.." targeting missing prototype: "..'"'..new_ingredient_name..'"'.." (new ingredient)")
 		end
 	end
 
@@ -723,7 +740,7 @@ function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_n
 			for _, ingredient in pairs(recipe.ingredients) do
 				if old_ingredient.name == (ingredient.name or ingredient[1]) then
 	
-					local ingredient_amount = ingredient.amount or ingredient[2]
+					local old_ingredient_amount = ingredient.amount or ingredient[2]
 					local duplicate_index = {}
 
 					-- Check for duplicates
@@ -742,18 +759,18 @@ function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_n
 					
 					ingredient.name = new_ingredient.name
 					ingredient.type = new_ingredient.type
-					ingredient.amount = ingredient_amount
+					ingredient.amount = new_ingredient_amount or old_ingredient_amount
 					
-					if duplicate_index.amount and ingredient.amount then
-						ingredient.amount = ingredient.amount+duplicate_index.amount
+					if duplicate_index.amount and ingredient.amount and not new_ingredient_amount then
+						ingredient.amount = old_ingredient_amount+duplicate_index.amount
 					end 
 					
-					table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced ingredient: ("..old_ingredient.type..") "..'"'..old_ingredient.name..'"'.." with: ("..new_ingredient.type..") "..'"'..new_ingredient.name..'"'.." in recipe: "..'"'..recipe_name..'"')
+					table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully replaced ingredient: ("..old_ingredient.type..") "..'"'..old_ingredient.name..'"'.." with: ("..new_ingredient.type..") "..'"'..new_ingredient.name..'"'.." in recipe: "..'"'..recipe_name..'"')
 				end
 			end
 		end
 	end
-
+	
 	if recipe_name and recipe then
 
 		local recipe_difficulty = {recipe}
@@ -781,10 +798,29 @@ function OSM.lib.recipe_replace_ingredient(old_ingredient_name, new_ingredient_n
 	end
 end
 
--- Replace result in recipe [recipe_name is optional]
-function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_name)
+-- Replace result in recipe [new_result_args supports string or table array, recipe_name is optional]
+function OSM.lib.recipe_replace_result(old_result_name, new_result_args, recipe_name)
 
 	if not OSM.mod or OSM.mod == {} then error("Mod name not specified") end
+
+	-- Index prototypes
+	local new_result_name = false
+	local new_result_amount = false
+	local new_result_amount_min = false
+	local new_result_amount_max = false
+	local new_result_probability = false
+	
+	if type(new_result_args) == "table" then
+		new_result_name = new_result_args.name or new_result_args[1]
+		new_result_amount = new_result_args.amount or new_result_args[2]
+		if new_result_args.name then
+			new_result_amount_min = new_result_args.amount_min
+			new_result_amount_max = new_result_args.amount_max
+			new_result_probability = new_result_args.probability
+		end
+	elseif type(new_result_args) == "string" then
+		new_result_name = new_result_args
+	end
 
 	local recipe = OSM.lib.get_recipe_prototype(recipe_name)
 	local new_result = OSM.lib.get_result_prototype(new_result_name, true)
@@ -792,15 +828,15 @@ function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_
 
 	if OSM.debug_mode then
 		if recipe_name and not recipe then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 		end
 
 		if not old_result then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..old_result_name..'"'.." (old result)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..old_result_name..'"'.." (old result)")
 		end
 		
 		if not new_result then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..new_result_name..'"'.." (new result)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"recipe_replace_result"'.." targeting missing prototype: "..'"'..new_result_name..'"'.." (new result)")
 		end
 	end
 	
@@ -812,12 +848,9 @@ function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_
 		if recipe.results then
 			for _, result in pairs(recipe.results) do
 				if old_result.name == (result.name or result[1]) then
-				
-					local result_type = new_result.type
+
 					local result_amount = result.amount or result[2]
 					local duplicate_index = {}
-
-					if result_type ~= "fluid" then result_type = "item" end
 					
 					-- Check for duplicates
 					for i, dupe_result in pairs (recipe.results) do
@@ -834,31 +867,33 @@ function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_
 
 					if not result.name then result[1] = nil end
 					if not result.amount then result[2] = nil end
+					if new_result.type ~= "fluid" then new_result.type = "item" end
 					
 					result.name = new_result.name
-					result.type = result_type
-					result.amount = result_amount
+					result.type = new_result.type
+					result.amount = new_result_amount or result_amount
+					result.amount_min = new_result_amount_min or result.amount_min
+					result.amount_max = new_result_amount_max or result.amount_min
+					result.probability = new_result_probability or result.probability
 					
-					if duplicate_index.amount and result.amount then
+					
+					if duplicate_index.amount and result.amount and not new_result_amount then
 						result.amount = result.amount+duplicate_index.amount
 					end 
-					
-					if duplicate_index.amount_min and result.amount_min then
+					if duplicate_index.amount_min and result.amount_min and not new_result_amount_min then
 						result.amount_min = math.floor((result.amount_min+duplicate_index.amount_min)/2-0.5)
 					end
-					
-					if duplicate_index.amount_max and result.amount_max then
+					if duplicate_index.amount_max and result.amount_max and not new_result_amount_max then
 						result.amount_max = math.floor((result.amount_max+duplicate_index.amount_max)/2-0.5)
-					end
-					
-					if duplicate_index.probability and result.probability then
+					end	
+					if duplicate_index.probability and result.probability and not new_result_probability then
 						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
 					end
 					if duplicate_index.temperature and result.temperature then
-						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
+						result.temperature = duplicate_index.temperature
 					end
 					
-					table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in recipe: "..'"'..recipe_name..'"')
+					table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in recipe: "..'"'..recipe_name..'"')
 				end
 				
 				-- Check if replaced product is main_product
@@ -870,7 +905,7 @@ function OSM.lib.recipe_replace_result(old_result_name, new_result_name, recipe_
 
 		if recipe.result and recipe.result == old_result.name then
 			recipe.result = new_result.name
-			table.insert(OSM.log.recipe, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in recipe: "..'"'..recipe_name..'"')
+			table.insert(OSM.log.recipe, '"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in recipe: "..'"'..recipe_name..'"')
 		end
 	end
 
@@ -914,12 +949,12 @@ function OSM.lib.technology_add_unlock(recipe_name, technology_name)
 	
 	if OSM.debug_mode then
 		if technology_name and not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 			return
 		end
 
 		if not recipe then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_unlock"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_unlock"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 		end
 	end
 
@@ -930,11 +965,11 @@ function OSM.lib.technology_add_unlock(recipe_name, technology_name)
 			if dupe_effect.type == "unlock-recipe" and dupe_effect.recipe == recipe.name then return end
 		end
 		table.insert(technology.effects, {type = "unlock-recipe", recipe = recipe.name})
-		table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully added recipe unlock: "..'"'..recipe.name..'"'.." to technology: "..'"'..technology.name..'"')
+		table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully added recipe unlock: "..'"'..recipe.name..'"'.." to technology: "..'"'..technology.name..'"')
 
 	elseif technology and not technology.effects then
 		technology.effects = {{type = "unlock-recipe", recipe = recipe.name}}
-		table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully added recipe unlock: "..'"'..recipe.name..'"'.." to technology: "..'"'..technology.name..'"')
+		table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully added recipe unlock: "..'"'..recipe.name..'"'.." to technology: "..'"'..technology.name..'"')
 	end
 end
 
@@ -948,11 +983,11 @@ function OSM.lib.technology_add_prerequisite(prerequisite_name, technology_name)
 	
 	if OSM.debug_mode then
 		if not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 		end
 
 		if not prerequisite then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_prerequisite"'.." targeting missing prototype: "..'"'..prerequisite_name..'"'.." (new prerequisite)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_add_prerequisite"'.." targeting missing prototype: "..'"'..prerequisite_name..'"'.." (new prerequisite)")
 		end
 	end
 
@@ -963,11 +998,11 @@ function OSM.lib.technology_add_prerequisite(prerequisite_name, technology_name)
 			if dupe_prerequisite == prerequisite.name then return end
 		end
 		table.insert(technology.prerequisites, prerequisite.name)
-		table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully added prerequisite: "..'"'..prerequisite.name..'"'.." to technology: "..'"'..technology.name..'"')
+		table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully added prerequisite: "..'"'..prerequisite.name..'"'.." to technology: "..'"'..technology.name..'"')
 
 	elseif technology and not technology.prerequisites then
 		technology.prerequisites = {prerequisite.name}
-		table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully added prerequisite: "..'"'..prerequisite.name..'"'.." to technology: "..'"'..technology.name..'"')
+		table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully added prerequisite: "..'"'..prerequisite.name..'"'.." to technology: "..'"'..technology.name..'"')
 	end
 end
 
@@ -981,11 +1016,11 @@ function OSM.lib.technology_remove_unlock(recipe_name, technology_name)
 	
 	if OSM.debug_mode then
 		if technology_name and not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 		end
 
 		if not recipe then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_unlock"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_unlock"'.." targeting missing prototype: "..'"'..recipe_name..'"'.." (recipe)")
 			return
 		end
 	end
@@ -996,7 +1031,7 @@ function OSM.lib.technology_remove_unlock(recipe_name, technology_name)
 		for i, effect in pairs(technology.effects) do
 			if effect.type == "unlock-recipe" and effect.recipe == recipe_name then
 				technology.effects[i] = nil
-				table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully removed unlock of recipe: "..'"'..recipe.name..'"'.." from technology: "..'"'..technology.name..'"')
+				table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully removed unlock of recipe: "..'"'..recipe.name..'"'.." from technology: "..'"'..technology.name..'"')
 			end
 		end
 	end
@@ -1023,12 +1058,12 @@ function OSM.lib.technology_remove_prerequisite(prerequisite_name, technology_na
 	
 	if OSM.debug_mode then
 		if technology_name and not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 			return
 		end
 
 		if not prerequisite then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_prerequisite"'.." targeting missing prototype: "..'"'..prerequisite_name..'"'.." (prerequisite)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_remove_prerequisite"'.." targeting missing prototype: "..'"'..prerequisite_name..'"'.." (prerequisite)")
 			return
 		end
 	end
@@ -1037,7 +1072,7 @@ function OSM.lib.technology_remove_prerequisite(prerequisite_name, technology_na
 		for i, prerequisite in pairs (technology.prerequisites) do
 			if prerequisite == prerequisite_name then
 				technology.prerequisites[i] = nil
-				table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully removed prerequisite: "..'"'..prerequisite.name..'"'.." from technology: "..'"'..technology.name..'"')
+				table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully removed prerequisite: "..'"'..prerequisite.name..'"'.." from technology: "..'"'..technology.name..'"')
 			end
 		end
 	end
@@ -1067,17 +1102,17 @@ function OSM.lib.technology_replace_unlock(old_recipe_name, new_recipe_name, tec
 
 	if OSM.debug_mode then
 		if technology_name and not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 			return
 		end
 	
 		if not old_recipe then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..old_recipe_name..'"'.." (old recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..old_recipe_name..'"'.." (old recipe)")
 			return
 		end
 	
 		if not new_recipe then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..new_recipe_name..'"'.." (new recipe)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_unlock"'.." targeting missing prototype: "..'"'..new_recipe_name..'"'.." (new recipe)")
 			return
 		end
 	end
@@ -1094,7 +1129,7 @@ function OSM.lib.technology_replace_unlock(old_recipe_name, new_recipe_name, tec
 					end
 				end
 				technology.effects[i].recipe = new_recipe.name
-				table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced unlock of recipe: "..'"'..old_recipe.name..'"'.." with: "..'"'..new_recipe.name..'"'.." in technology: "..'"'..technology.name..'"')
+				table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully replaced unlock of recipe: "..'"'..old_recipe.name..'"'.." with: "..'"'..new_recipe.name..'"'.." in technology: "..'"'..technology.name..'"')
 			end
 		end
 	end
@@ -1122,17 +1157,17 @@ function OSM.lib.technology_replace_prerequisite(old_prerequisite_name, new_prer
 
 	if OSM.debug_mode then
 		if technology_name and not technology then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
 			return
 		end
 	
 		if not old_prerequisite then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..old_prerequisite_name..'"'.." (old prerequisite)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..old_prerequisite_name..'"'.." (old prerequisite)")
 			return
 		end
 	
 		if not new_prerequisite then
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..new_prerequisite_name..'"'.." (new prerequisite)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_prerequisite"'.." targeting missing prototype: "..'"'..new_prerequisite_name..'"'.." (new prerequisite)")
 			return
 		end
 	end
@@ -1149,7 +1184,7 @@ function OSM.lib.technology_replace_prerequisite(old_prerequisite_name, new_prer
 					end
 				end
 				technology.prerequisites[i] = new_prerequisite.name
-				table.insert(OSM.log.technology, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced prerequisite: "..'"'..old_prerequisite.name..'"'.." with: "..'"'..new_prerequisite.name..'"'.." in technology: "..'"'..technology.name..'"')
+				table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully replaced prerequisite: "..'"'..old_prerequisite.name..'"'.." with: "..'"'..new_prerequisite.name..'"'.." in technology: "..'"'..technology.name..'"')
 			end
 		end
 	end
@@ -1161,6 +1196,89 @@ function OSM.lib.technology_replace_prerequisite(old_prerequisite_name, new_prer
 		for _, technology in pairs(data.raw.technology) do
 			if technology.prerequisites then
 				replace_prerequisite(technology)
+			end
+		end
+	end
+end
+
+-- Replace technology science pack [technology_name is optional]
+function OSM.lib.technology_replace_science_pack(old_pack_name, new_pack_args, technology_name)
+
+	if not OSM.mod or OSM.mod == {} then error("Mod name not specified") end
+	
+	-- Index prototypes
+	local new_pack_name = false
+	local new_pack_amount = false
+	
+	if type(new_pack_args) == "table" then
+		new_pack_name = new_pack_args.name or new_pack_args[1]
+		new_pack_amount = new_pack_args.amount or new_pack_args[2]
+	elseif type(new_pack_args) == "string" then
+		new_pack_name = new_pack_args
+	end
+
+	local technology = OSM.lib.get_technology_prototype(technology_name)
+	local old_pack = OSM.lib.get_item_prototype(old_pack_name, true)
+	local new_pack = OSM.lib.get_item_prototype(new_pack_name, true)
+
+	if OSM.debug_mode then
+		if technology_name and not technology then 
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_science_pack"'.." targeting missing prototype: "..'"'..technology_name..'"'.." (technology)")
+		end
+
+		if not old_pack then 
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_science_pack"'.." targeting missing prototype: "..'"'..old_pack_name..'"'.." (old science pack)")
+		end
+		
+		if not new_pack then 
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"technology_replace_science_pack"'.." targeting missing prototype: "..'"'..new_pack_name..'"'.." (new science pack)")
+		end
+	end
+	
+	if not old_pack then return end
+	if not new_pack then return end
+
+	local function replace_science_pack(technology)
+		
+		for _, pack in pairs(technology.unit.ingredients) do
+			if old_pack.name == (pack.name or pack[1]) then
+
+				local pack_amount = pack.amount or pack[2]
+				local duplicate_index = {}
+				
+				-- Check for duplicates
+				for i, dupe_pack in pairs (technology.unit.ingredients) do
+					if new_pack.name == (dupe_pack.name or dupe_pack[1]) then
+
+						duplicate_index.amount = dupe_pack.amount or dupe_pack[2]
+
+						technology.unit.ingredients[i] = nil
+					end
+				end
+
+				if not pack.name then pack[1] = nil end
+				if not pack.amount then pack[2] = nil end
+				if new_pack.type ~= "fluid" then new_pack.type = "item" end
+				
+				pack.name = new_pack.name
+				pack.type = new_pack.type
+				pack.amount = new_pack_amount or pack_amount
+				
+				if duplicate_index.amount and pack.amount and not new_pack_amount then
+					pack.amount = pack.amount+duplicate_index.amount
+				end
+				table.insert(OSM.log.technology, '"'..OSM.mod..'"'..": Successfully replaced science pack: ("..old_pack.type..") "..'"'..old_pack.name..'"'.." with: ("..new_pack.type..") "..'"'..new_pack.name..'"'.." in recipe: "..'"'..technology.name..'"')
+			end
+		end
+	end
+
+	if technology_name and technology.unit and technology.unit.ingredients then
+		replace_science_pack(technology)
+	
+	elseif not technology_name then
+		for _, technology in pairs(data.raw.technology) do
+			if technology.unit and technology.unit.ingredients then
+				replace_science_pack(technology)
 			end
 		end
 	end
@@ -1180,18 +1298,19 @@ function OSM.lib.resource_replace_result(old_result_name, new_result_name, resou
 	
 	if OSM.debug_mode then
 		if resource_name and not resource then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..resource_name..'"'.." (resource)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..resource_name..'"'.." (resource)")
 		end
 
 		if not old_result then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..old_result_name..'"'.." (old result)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..old_result_name..'"'.." (old result)")
 		end
 		
 		if not new_result then 
-			table.insert(OSM.log.errors, "Mod: "..'"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..new_result_name..'"'.." (new result)")
+			table.insert(OSM.log.errors, '"'..OSM.mod..'"'..": Attempted to run function: "..'"resource_replace_result"'.." targeting missing prototype: "..'"'..new_result_name..'"'.." (new result)")
 		end
 	end
 	
+	if not resource.minable then return end
 	if not new_result then return end
 	if not old_result then return end
 	
@@ -1230,15 +1349,12 @@ function OSM.lib.resource_replace_result(old_result_name, new_result_name, resou
 					if duplicate_index.amount and result.amount then
 						result.amount = result.amount+duplicate_index.amount
 					end 
-					
 					if duplicate_index.amount_min and result.amount_min then
 						result.amount_min = math.floor((result.amount_min+duplicate_index.amount_min)/2-0.5)
-					end
-					
+					end		
 					if duplicate_index.amount_max and result.amount_max then
 						result.amount_max = math.floor((result.amount_max+duplicate_index.amount_max)/2-0.5)
-					end
-					
+					end				
 					if duplicate_index.probability and result.probability then
 						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
 					end
@@ -1246,14 +1362,14 @@ function OSM.lib.resource_replace_result(old_result_name, new_result_name, resou
 						result.probability = math.floor((result.probability+duplicate_index.probability)/2-0.5)
 					end
 					
-					table.insert(OSM.log.resource, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
+					table.insert(OSM.log.resource, '"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
 				end
 			end
 		end
 
-		if resource.minable and resource.minable.result and resource.minable.result.name == old_result.name then
+		if resource.minable.result and resource.minable.result.name == old_result.name then
 			resource.minable.result.name = new_result.name
-			table.insert(OSM.log.resource, "Mod: "..'"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
+			table.insert(OSM.log.resource, '"'..OSM.mod..'"'..": Successfully replaced result: ("..old_result.type..") "..'"'..old_result.name..'"'.." with: ("..new_result.type..") "..'"'..new_result.name..'"'.." in resource: "..'"'..resource.name..'"')
 		end
 
 	end

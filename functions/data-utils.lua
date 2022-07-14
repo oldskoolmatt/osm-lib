@@ -47,3 +47,40 @@ function OSM.utils.make_placeholder(placeholder_name)
 		stack_size = 1
 	}	data:extend({OSM_placeholder})
 end
+
+-- Returns true if prototype exists
+function OSM.utils.prototype_valid(prototype_type, prototype_name)
+
+	local function prototype_valid (prototype_type, prototype_name)
+		if prototype_type == "entity" then
+			for _, entity in pairs(OSM.entity_types) do
+				if data.raw[entity][prototype_name] then return true end
+			end
+	
+		elseif prototype_type == "recipe" then
+			if data.raw.recipe[prototype_name] then return true end
+	
+		elseif prototype_type == "item" then
+			for _, item in pairs(OSM.item_types) do
+				if data.raw[item][prototype_name] then return true end
+			end
+	
+		elseif prototype_type == "fluid" then
+			if data.raw.fluid[prototype_name] then return true end
+	
+		elseif prototype_type == "technology" then
+			if data.raw.technology[prototype_name] then return true end
+
+		elseif prototype_type == "resource" then
+			if data.raw.resource[prototype_name] then return true end
+		end
+	end
+
+	if type(prototype_type) == "string" then
+		return prototype_valid(prototype_type, prototype_name)
+	elseif type(prototype_type) == "table" then
+		for _, sub_type in pairs(prototype_type) do
+			return prototype_valid(sub_type, prototype_name)
+		end
+	end
+end

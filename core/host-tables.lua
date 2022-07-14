@@ -1,10 +1,11 @@
 -- Main hosts
 if not OSM then OSM = {} end
-if not OSM.mod then OSM.mod = {} end
 if not OSM.lib then OSM.lib = {} end
+if not OSM.mod then OSM.mod = {} end
 if not OSM.log then OSM.log = {} end
 if not OSM.utils then OSM.utils = {} end
 if not OSM.table then OSM.table = {} end
+if not OSM.data_stage then OSM.data_stage = 1 end
 
 -- Disabled prototype host table
 if not OSM.table.disabled_prototypes then OSM.table.disabled_prototypes = {} end
@@ -33,11 +34,12 @@ OSM.log.recipe = {}
 OSM.log.item = {}
 OSM.log.fluid = {}
 OSM.log.technology = {}
+OSM.log.resource = {}
 OSM.log.errors = {}
+OSM.log.warnings = {}
 
 -- Handy constants
-OSM.void_results = {{type="item", name="OSM-result-void", amount=1, probability=0}}
-OSM.void_ingredients = {{type="item", name="OSM-ingredient-void", amount=1, probability=0}}
+OSM.void_recipe = {{type="item", name="OSM-hoffman-void-recipe", amount=1, probability=0}}
 
 -- Handy stuff
 OSM.data_types = require("utils.data-types")			--[[contains all data.raw prototype subtypes]]
